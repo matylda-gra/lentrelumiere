@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Matylda Graciano & L'Entre-Lumière</title>
+  <style>
+    /* --- TON CSS D'ORIGINE (préservé) --- */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Anton', sans-serif;
+      overflow: hidden; /* on garde l'accueil figé */
+    }
+
+    /* Fond (hero inchangé) */
+    .hero {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: url("fond.png") no-repeat center center/cover;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      flex-direction: column;
+      text-align: center;
+      transition: background 1s ease;
+    }
+
+    /* --- MODIFICATION: center devient un conteneur 2 entrées (gauche/droite) --- */
+    .center {
+      position: absolute;
+      top: 25%;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      transition: opacity 0.6s ease, transform 0.6s ease;
+      display: flex;
+      gap: 120px;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+    }
+    /* Mémoire section centrée, deux blocs verticaux */
+.memoire-center {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  display: flex;
+  align-items: center; /* centre verticalement */
+  justify-content: center; /* centre horizontalement */
+  gap: 80px;
+  z-index: 900;
+  background: rgba(255,255,255,0.65); /* Plus transparent */
+}
+/* Bloc mémoire adaptatif */
+.memoire-block {
+  background: white;
+  border-radius: 0 38px 0 38px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  padding: 48px 36px 38px 36px;
+  min-width: 280px;
+  min-height: 340px;
+  width: 50vw;
+  max-width: 540px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  transition: width 0.4s cubic-bezier(.2,.8,.2,1);
+}
+
+/* Logo adaptatif à la taille du bloc */
+.memoire-logo {
+  width: 70%;
+  height: auto;
+  margin-bottom: 24px;
+  max-width: 380px;
+  min-width: 120px;
+  transition: width 0.4s cubic-bezier(.2,.8,.2,1);
+}
+
+.memoire-block h2 {
+  font-size: 1.4em;
+  margin-bottom: 12px;
+  color: #222;
+  text-align: center;
+  font-family: 'Anton', sans-serif;
+  letter-spacing: 1px;
+}
+.memoire-titre {
+  font-size: 1.1em;
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-align: center;
+}
+.memoire-date {
+  font-size: 1em;
+  color: #444;
+  margin-bottom: 10px;
+}
+.memoire-mention {
+  font-size: 1em;
+  color: #008000;
+  font-weight: bold;
+  margin-bottom: 0;
+}
+    /* classe utilisée pour cacher définitivement quand on ouvre un menu */
+    .center.hidden { opacity: 0; pointer-events: none; }
+
+    /* classe d'initialisation : on cache tout au chargement (juste fond visible) */
+    .center.init-hide { opacity: 0; pointer-events: none; }
+
+    /* Chaque 'entrée' = logo + sous-titre (comportement groupé) */
+    .entry {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transform-origin: center;
+      transition: transform 0.22s cubic-bezier(.2,.8,.2,1);
+      user-select: none;
+    }
+
+    /* agrandir le bloc entier au hover (logo + texte ensemble) */
+    .entry:hover { transform: scale(1.06); }
+
+    /* logos : animation d'apparition */
+    .entry img {
+      max-width: 420px; /* reprend ton ancienne taille, sera réduite par le conteneur */
+      max-height: 220px;
+      width: auto;
+      cursor: pointer;
+      transition: transform 0.3s ease, opacity 0.6s ease, filter 0.3s ease;
+      opacity: 0;              /* caché au départ */
+      transform: translateY(8px);
+      -webkit-user-drag: none;
+    }
+    .entry img.visible { opacity: 1; transform: translateY(0); }
+
+    /* sous-titre : caché au départ, apparait après les logos */
+    .subtitle {
+      font-size: 14px;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: black;
+      margin-top: 8px;
+      cursor: pointer;
+      transition: transform 0.2s ease, letter-spacing 0.2s ease, opacity 0.5s ease, transform 0.5s;
+      opacity: 0;
+      transform: translateY(6px);
+      white-space: nowrap;
+    }
+    .subtitle.visible { opacity: 1; transform: translateY(0); }
+
+    /* Le texte sous le logo Matylda (plus petit) */
+    #subtitleMatylda { font-family: 'Anton', sans-serif; font-size:13px; }
+    #subtitleEntre { font-family: 'Anton', sans-serif; font-size:13px; }
+
+    /* Menus latéraux — on garde ta logique .active existante (préservée) */
+    .menu {
+      position: fixed;
+      top: 0;
+      width: 260px;
+      height: 100%;
+      background: black;
+      color: white;
+      padding: 40px 20px;
+      transform: translateX(-100%);
+      transition: transform 0.6s ease;
+      display: flex;
+      flex-direction: column;
+      z-index: 1000;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    .menu.right {
+      right: 0;
+      left: auto;
+      transform: translateX(100%);
+      background: #111;
+    }
+    .menu.active.left { transform: translateX(0); }
+    .menu.active.right { transform: translateX(0); }
+
+    .menu ul { list-style: none; padding: 0; margin: 0; }
+    .menu ul li { margin: 15px 0; position: relative; }
+    .menu ul li a, .menu ul li span {
+      text-decoration: none;
+      font-size: 15px;
+      color: white;
+      font-weight: 700;
+      text-transform: uppercase;
+      transition: transform 0.2s ease, color 0.3s ease, font-size 0.3s ease;
+      display: inline-block;
+      cursor: pointer;
+    }
+    .menu ul li a:hover, .menu ul li span:hover { transform: scale(1.03); color: #ddd; }
+
+    /* Sous-menu (conserve ta logique) */
+    .submenu { display: none; margin-top: 10px; margin-left: 15px; }
+    .submenu li { margin: 8px 0; }
+    .submenu li a { font-size: 14px; font-weight: 600; text-transform: capitalize; }
+
+    /* Mini logo/menu (garde les styles) */
+    .mini-logo {
+      max-width: 120px;
+      margin-bottom: 20px;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+      filter: invert(1);
+    }
+    .mini-logo:hover { transform: scale(1.1); }
+
+    .mini-subtitle {
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: 30px;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+      color: white;
+    }
+    .mini-subtitle:hover { transform: scale(1.1); }
+
+    /* Section Mémoire (inchangée) */
+    #memoireSection {
+      display: none;
+      position: absolute;
+      bottom: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      gap: 40px;
+      
+    }
+
+    #memoireSection.show { display: flex; }
+    
+
+   #memoireSection .card {
+  background: rgba(255,255,255,0.95);
+  padding: 38px 28px;
+  border-radius: 0 32px 0 32px;
+  text-align: left;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  width: 340px;
+  min-height: 340px;
+  margin: 0 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+#memoireSection {
+  flex-direction: row;
+  gap: 60px;
+}
+#memoireSection .card p {
+  font-size: 18px;
+  font-weight: bold;
+  margin-top: 18px;
+  color: #222;
+}
+.school-logo {
+  max-width: 120px;
+  max-height: 100px;
+  margin-bottom: 18px;
+}
+
+    /* Zone projets (inchangée) */
+    .projects {
+      display: none;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 40px;
+      text-align: left;
+    }
+    .projects.active { display: block; position: relative; top: 100%; }
+
+    /* ---------- NOUVEAU : Overlay scrollable pour les pages ---------- */
+    .overlay {
+      display: none;                /* cachée au départ */
+      position: fixed;
+      inset: 0;                     /* top:0; right:0; bottom:0; left:0 */
+      background: rgba(255,255,255,0.96);
+      color: #111;
+      overflow-y: auto;             /* ✅ scroll interne */
+      padding: 40px 20px;
+      box-sizing: border-box;
+      z-index: 1200;                /* au-dessus du fond, en-dessous des menus (1000 → on monte les menus via .edge) */
+    }
+    .overlay.active { display: block; }
+
+    .overlay .back-btn {
+      position: sticky;
+      top: 0;
+      display: inline-block;
+      background: rgba(0,0,0,0.8);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 16px;
+      z-index: 1300;
+      text-decoration: none;
+      user-select: none;
+    }
+    .overlay .back-btn:hover { background: rgba(0,0,0,0.95); }
+
+    .overlay h1 { margin: 10px 0 10px; }
+    .overlay img.hero-img {
+      max-width: 680px;
+      width: 90%;
+      display: block;
+      margin: 10px auto 20px;
+      border-radius: 10px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+    }
+    .overlay p {
+      max-width: 900px;
+      margin: 0 auto 24px;
+      line-height: 1.6;
+      font-size: 16px;
+    }
+    .overlay .gallery {
+      max-width: 1000px;
+      margin: 10px auto 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .overlay .gallery img {
+      width: 100%;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+      transition: transform 0.25s ease;
+      cursor: zoom-in;
+    }
+    .overlay .gallery img:hover { transform: scale(1.02); }
+
+    /* ---------- NOUVEAU : zones de bord pour faire apparaître les menus ---------- */
+    .edge {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      width: 14px;                 /* largeur sensible */
+      z-index: 2000;               /* au-dessus de l’overlay */
+      background: transparent;     /* invisible */
+      pointer-events: auto;        /* capte le hover */
+    }
+    .edge-left { left: 0; }
+    .edge-right { right: 0; }
+
+    /* Quand le menu reçoit la classe .show, il coulisse */
+    .menu.show { transform: translateX(0) !important; }
+
+    /* Styles pour le contenu additionnel dans menu right (Entre-Lumière) */
+    .entre-section { display: none; margin-top: 18px; color: #eee; font-size: 14px; }
+    .entre-section.active { display: block; }
+
+    .entre-section h3 { margin: 0 0 10px; color: #fff; font-size: 16px; }
+    .entre-section p { color: #ddd; line-height: 1.5; }
+/* Overlay Artistes & disciplines : formes irrégulières */
+#overlay-artistes-disciplines .form-1{clip-path:polygon(0 0,100% 8%,85% 100%,5% 85%);} 
+#overlay-artistes-disciplines .form-2{clip-path:polygon(12% 0,100% 0,95% 100%,0 75%);} 
+#overlay-artistes-disciplines .form-3{clip-path:polygon(50% 0,100% 35%,65% 100%,0 55%);} 
+#overlay-artistes-disciplines .form-4{clip-path:polygon(0 18%,85% 0,100% 85%,15% 100%);} 
+#overlay-artistes-disciplines .form-5{clip-path:polygon(0 0,100% 18%,75% 100%,0 82%);} 
+#overlay-artistes-disciplines .form-6{clip-path:polygon(8% 5%,92% 0,100% 95%,0 100%);} 
+#overlay-artistes-disciplines .shard{width:280px;height:200px;}
+#overlay-artistes-disciplines #musique{left:0; top:0;}
+#overlay-artistes-disciplines #danse{right:0; top:0;}
+#overlay-artistes-disciplines #arts-visuels{right:5%; top:25%;}
+#overlay-artistes-disciplines #ecriture{left:0; bottom:0;}
+#overlay-artistes-disciplines #mise-en-scene{right:0; bottom:0;}
+#overlay-artistes-disciplines #arts-numeriques{left:30%; bottom:10%;}
+#overlay-artistes-disciplines #scenographie{left:10%; top:35%;}
+#overlay-artistes-disciplines #peinture{right:25%; bottom:15%;}
+#overlay-artistes-disciplines #lumiere{left:50%; top:10%;}
+#overlay-artistes-disciplines #costume{left:70%; bottom:30%;}
+#overlay-artistes-disciplines #performance{left:20%; bottom:25%;}
+#overlay-artistes-disciplines #medias-hybrides{left:45%; bottom:35%;}
+#overlay-artistes-disciplines .stage:hover .shard{
+  clip-path:polygon(0 0,100% 0,100% 100%,0 100%);
+  width:180px;
+  height:120px;
+  border-radius:4px;
+}
+#overlay-artistes-disciplines .stage:hover #musique{left:5%; top:20%;}
+#overlay-artistes-disciplines .stage:hover #danse{left:25%; top:20%;}
+#overlay-artistes-disciplines .stage:hover #arts-visuels{left:45%; top:20%;}
+#overlay-artistes-disciplines .stage:hover #ecriture{left:65%; top:20%;}
+#overlay-artistes-disciplines .stage:hover #mise-en-scene{left:5%; top:50%;}
+#overlay-artistes-disciplines .stage:hover #arts-numeriques{left:25%; top:50%;}
+#overlay-artistes-disciplines .stage:hover #scenographie{left:45%; top:50%;}
+#overlay-artistes-disciplines .stage:hover #peinture{left:65%; top:50%;}
+#overlay-artistes-disciplines .stage:hover #lumiere{left:5%; top:70%;}
+#overlay-artistes-disciplines .stage:hover #costume{left:25%; top:70%;}
+#overlay-artistes-disciplines .stage:hover #performance{left:45%; top:70%;}
+#overlay-artistes-disciplines .stage:hover #medias-hybrides{left:65%; top:70%;}
+    /* Responsive min-width adjustments */
+    @media (max-width: 900px) {
+      .center { flex-direction: column; gap: 30px; top: 18%; left: 50%; transform: translateX(-50%); }
+      .entry img { max-width: 300px; max-height: 160px; }
+      .menu { width: 86%; }
+      .menu.right { width: 86%; }
+    }
+
+    @media (max-width: 900px) {
+  .memoire-block {
+    width: 90vw;
+    max-width: 98vw;
+    min-width: 0;
+    padding: 28px 10px;
+  }
+  .memoire-logo {
+    max-width: 180px;
+    max-height: 120px;
+  }
+  .memoire-center {
+    gap: 20px;
+    flex-direction: column;
+    align-items: center;
+  }
+}
+/* Responsive mobile */
+@media (max-width: 900px) {
+  .memoire-block {
+    width: 90vw;
+    max-width: 98vw;
+    min-width: 0;
+    padding: 28px 10px;
+  }
+  .memoire-logo {
+    width: 60%;
+    max-width: 180px;
+    min-width: 80px;
+  }
+  .memoire-center {
+    gap: 20px;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Overlay Artistes & disciplines */
+#overlay-artistes-disciplines .stage{
+  width:100%;
+  max-width:1200px;
+  height:100vh;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  text-align:center;
+  margin:0 auto;
+}
+#overlay-artistes-disciplines .intro{
+  position:relative;
+  z-index:50;
+  color:#000;
+}
+#overlay-artistes-disciplines .intro h1{margin:0;font-size:32px;letter-spacing:0.5px;}
+#overlay-artistes-disciplines .intro p{margin:12px 0 0;font-size:18px;opacity:0.95;line-height:1.4;}
+#overlay-artistes-disciplines .shards{
+  position:absolute;
+  inset:0;
+  z-index:1;
+}
+#overlay-artistes-disciplines .shard{
+  position:absolute;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  background:#000;
+  cursor:pointer;
+  transition:all 1s ease;
+  text-align:center;
+  font-size:18px;
+  font-weight:600;
+  padding:8px;
+}
+ </style>
+</head>
+<body>
+
+  <!-- Zones "bord" pour révéler les menus au survol -->
+  <div class="edge edge-left" aria-hidden="true"></div>
+  <div class="edge edge-right" aria-hidden="true"></div>
+
+  <!-- Fond + intro (inchangé) -->
+  <div class="hero" id="hero">
+    <!-- Centre : deux entrées (MATYLDA à gauche, ENTRE-LUMIÈRE à droite).
+         on met init-hide pour cacher au chargement ; JS fera apparaître logos/sous-titres -->
+    <div class="center init-hide" id="center">
+      <!-- Bloc Matylda (GAUCHE) -->
+      <div class="entry" id="entry-matylda" aria-label="Accès Matylda">
+        <!-- On garde le même nom de fichier que tu as -->
+        <img src="matylda_graciano.png" alt="Logo Matylda Graciano" id="logo">
+        <div class="subtitle" id="subtitleMatylda">Mes projets personnels</div>
+      </div>
+
+      <!-- Bloc Entre-Lumière (DROITE) -->
+      <div class="entry" id="entry-entre" aria-label="Accès L'Entre-Lumière">
+        <img src="entre-lumiere.png" alt="Logo L'Entre-Lumière" id="logoEntre">
+        <div class="subtitle" id="subtitleEntre">Association de création pluridisciplinaire</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Menu gauche (MATYLDA) — conservé de ton original -->
+  <div class="menu left" id="menuLeft" aria-hidden="true">
+    <img src="matylda_graciano.png" alt="Mini Logo" class="mini-logo">
+    <ul>
+      <ul>
+  <li>
+    <a href="#" id="toggleBio">Biographie ▾</a>
+    <ul class="submenu" id="submenuBio">
+      <li><a href="#">Expérience</a></li>
+      <li><a href="CV Matylda Graciano 2025.pdf" target="_blank">CV</a></li>
+      <li>
+        <a href="#" id="toggleEtudes">Études ▾</a>
+        <ul class="submenu" id="submenuEtudes">
+          <li>
+            <a href="#" id="openMemoireFR">
+              MASTER 2 RECHERCHE - Arts plastiques et création contemporaine, 2023-2025 | mention très bien
+            </a>
+          </li>
+          <li>
+            <a href="#" id="openMemoirePL">
+              MASTER 2 Architecture d’intérieur, spécialité Scénographie d’espace public et multimédia, 2023-2025 | mention très bien
+            </a>
+          </li>
+        </ul>
+      </li>
+      <li><a href="#">Portfolio</a></li>
+      <li><a href="PORTFOLIO professionel fin 2024.pdf" target="_blank">PORTFOLIO professionnel fin 2024.pdf</a></li>
+    </ul>
+  </li>
+  <!-- ...le reste inchangé... -->
+</ul>
+      <li>
+        <a href="#" id="togglePerso">Projets personnels ▾</a>
+        <ul class="submenu" id="submenuPerso">
+          <li><a href="#">Architecture</a></li>
+          <li><a href="#">Architecture d'intérieur</a></li>
+          <li><a href="#">Scénographie</a></li>
+          <li><a href="#">Sculpture</a></li>
+          <li><a href="#">Peinture</a></li>
+          <li><a href="#">Dessin</a></li>
+          <li><a href="#">Danse</a></li>
+          <li><a href="#">Musique</a></li>
+        </ul>
+      </li>
+
+      <!-- Expositions (Matylda) -->
+      <li>
+        <a href="#" id="toggleExpo">Expositions ▾</a>
+        <ul class="submenu" id="submenuExpo">
+          <li><a href="#" id="expoCzteryLink">Cztery Barwy Palety</a></li>
+          <li><a href="#" id="expoTwarzowiskoLink">TWARZOWISKO</a></li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Menu droit (ENTRE-LUMIÈRE) — contenu étendu -->
+  <div class="menu right" id="menuRight" aria-hidden="true">
+    <div class="mini-subtitle">L'Entre-Lumière</div>
+    <ul>
+      <li><span id="entreManifesteLink">Présentation & Manifeste</span></li>
+      <li><span id="entreArtistesLink">Les Arts & Disciplines</span></li>
+      <li><span id="entreCalendarLink">Événements / Calendrier</span></li>
+      <li><span id="entreNouveautesLink">Nouveautés & Projets</span></li>
+      <li><span id="entreRejoindreLink">Rejoindre l'association</span></li>
+      <li><span id="entreContactLink">Contact</span></li>
+    </ul>
+
+    <!-- Contenu interne du panneau Entre-Lumière (s'affiche selon le lien cliqué) -->
+    <div id="entre-manifeste" class="entre-section">
+      <h3>Manifeste</h3>
+      <p><strong>L’Entre-Lumière</strong> est une association de création artistique novatrice. Nous réunissons des artistes de toutes disciplines — musique, danse, chant, arts visuels, écriture, mise en scène — afin de créer des œuvres collectives, vivantes et pluridisciplinaires. Notre démarche lie improvisation et écriture, recherche et performance.</p>
+      <p><em>Entre l’ombre et la clarté, la rencontre des talents engendre une lumière nouvelle.</em></p>
+    </div>
+
+    <div id="entre-artistes" class="entre-section">
+      <h3>Artistes & disciplines</h3>
+      <p>Musique • Danse • Chant lyrique • Arts visuels • Écriture • Mise en scène • Arts numériques • Image & Son</p>
+      <p>Nous invitons interprètes, compositeurs, chorégraphes, plasticiens et technicien·ne·s à collaborer en laboratoire puis en création publique.</p>
+    </div>
+
+    <div id="entre-calendar" class="entre-section">
+      <h3>Calendrier (extrait)</h3>
+      <p><strong>Prochain laboratoire</strong> — 18 octobre 2025 : session d'improvisation musique/peinture.</p>
+      <p><strong>Résidence</strong> — 5–12 novembre 2025 : création d'une forme lyrique hybride.</p>
+      <p>Pour proposer un événement : envoyez une brève description via la section Contact.</p>
+    </div>
+
+    <div id="entre-nouveautes" class="entre-section">
+      <h3>Nouveautés & Projets</h3>
+      <p>• « Traversées » — mini-opéra en cours d'écriture (résidence octobre).<br>
+         • Série d'ateliers publics mêlant chant et peinture (novembre).</p>
+    </div>
+
+    <div id="entre-rejoindre" class="entre-section">
+      <h3>Rejoindre</h3>
+      <p>Envoyez une présentation courte et 2–3 liens vers vos travaux. Indiquez votre discipline et la proposition (impro, atelier, création, technique).</p>
+    </div>
+
+    <div id="entre-contact" class="entre-section">
+      <h3>Contact</h3>
+      <p>Email : <a href="mailto:contact@entre-lumiere.org" style="color:#fff; text-decoration:underline;">contact@entre-lumiere.org</a></p>
+    </div>
+  </div>
+
+  <!-- Section Mémoire (conservée) -->
+  <div id="memoireSection" class="memoire-center">
+    <div class="back-btn" id="backFromMemoire" style="position:absolute;top:32px;left:32px;z-index:1001;">← Retour</div>
+  <div class="memoire-block" id="cardMemoireFR">
+  <a href="#" id="openMemoireFRBloc" style="text-decoration:none;color:inherit;">
+    <img src="sorbonne_logo.png" alt="Sorbonne Logo" class="memoire-logo">
+    <h2>MASTER 2 RECHERCHE</h2>
+    <div class="memoire-titre">Arts plastiques et création contemporaine</div>
+    <div class="memoire-date">2023-2025</div>
+    <div class="memoire-mention">Mention très bien</div>
+  </a>
+</div>
+<div class="memoire-block" id="cardMemoirePL">
+  <a href="#" id="openMemoirePLBloc" style="text-decoration:none;color:inherit;">
+    <img src="beauxarts_logo.png" alt="Beaux-Arts Cracovie Logo" class="memoire-logo">
+    <h2>MASTER 2 Architecture d’intérieur</h2>
+    <div class="memoire-titre">Spécialité Scénographie d’espace public et multimédia</div>
+    <div class="memoire-date">2023-2025</div>
+    <div class="memoire-mention">Mention très bien</div>
+  
+</div>
+  
+  <!-- AJOUTE LE BOUTON ICI -->
+</div>
+</div>
+</div>
+
+  <!-- Section projets (conservée) -->
+  <div class="projects" id="projects">
+    <h2>Projets de scénographie</h2>
+    <p>Ici tu pourras rajouter plusieurs projets avec images, textes, etc.</p>
+  </div>
+
+  <!-- Overlay Expositions (conservées) -->
+  <div class="overlay" id="overlay-expo-cztery">
+    <div class="back-btn" id="backFromExpo">← Retour</div>
+    <h1>CZTERY BARWY PALETY</h1>
+    <img class="hero-img" src="wystawa_pokoleniowa.jpeg" alt="Affiche de l'exposition">
+    <p>
+      - Ekspozycja „Cztery barwy palety” ... (texte d'origine conservé)
+    </p>
+    <div class="gallery">
+      <img src="oeuvre1.jpg" alt="Œuvre 1">
+      <img src="oeuvre2.jpg" alt="Œuvre 2">
+      <img src="oeuvre3.png" alt="Œuvre 3">
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay-expo-twarzowisko">
+    <div class="back-btn" id="backFromExpoTwarz">← Retour</div>
+    <h1>TWARZOWISKO</h1>
+    <img class="hero-img" src="karwacjanow_plakat.jpeg" alt="Plakat wystawy TWARZOWISKO">
+    <p>
+      Tekst o wystawie TWARZOWISKO ... (texte d'origine conservé)
+    </p>
+    <div class="gallery">
+      <img src="karwacjanow1.jpeg" alt="Zdjęcie 1">
+      <img src="karwacjanow2.jpeg" alt="Zdjęcie 2">
+      <img src="karwacjanow3.jpeg" alt="Zdjęcie 3">
+      <img src="karwacjanow4.jpeg" alt="Zdjęcie 4">
+      <img src="karwacjanow5.jpeg" alt="Zdjęcie 5">
+    </div>
+  </div>
+<div id="entreLumiereContent" style="display:none;position:absolute;top:0;left:0;width:100vw;height:100vh;z-index:1500;background:rgba(255,255,255,0.98);overflow-y:auto;">
+  <div style="display:flex;flex-direction:row;align-items:center;justify-content:center;height:100%;">
+    <div style="flex:0 0 340px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#222;color:#fff;padding:48px 24px 48px 0;border-radius:0 48px 0 48px;height:80%;">
+      <h1 style="font-size:2.2em;text-align:center;margin-bottom:40px;">PRÉSENTATION</h1>
+      <h2 style="font-size:2em;text-align:center;margin-bottom:40px;">MANIFESTE</h2>
+    </div>
+    <div style="flex:1 1 600px;display:flex;flex-direction:column;justify-content:center;padding:48px 32px 48px 48px;color:#222;">
+      <div style="font-size:1.18em;line-height:1.7;margin-bottom:48px;">
+        L’association a pour objet le développement et la promotion d’activités culturelles et artistiques innovantes. Elle vise à favoriser la co-création d’œuvres pluridisciplinaires, incluant notamment l’opéra, la musique, la danse, le chant, le théâtre, les arts visuels, les arts numériques et la scénographie. L’association a pour mission de réunir des artistes de tous horizons et de toutes disciplines afin de concevoir des projets collectifs qui combinent recherche, expérimentation, improvisation et performance. Elle encourage le dialogue entre les disciplines, la mise en commun des talents et la création d’expériences artistiques originales à destination de la communauté universitaire et du grand public. L’association peut organiser des ateliers, des laboratoires artistiques, des spectacles, des expositions et des manifestations culturelles afin de promouvoir la création collective et le partage artistique.
+      </div>
+      <div style="font-size:1.18em;line-height:1.7;">
+L’Entre-Lumière est un passage, un souffle, un horizon.<br>
+C’est l’espace fragile et puissant qui relie nos élans créatifs.<br>
+Ici, la musique rencontre la couleur.<br>
+La danse devient chant.<br>
+Le geste se fait poésie.<br>
+La voix devient lumière.<br>
+Nous avançons ensemble, de l’improvisation la plus spontanée à la conception la plus aboutie, pour tisser une œuvre commune : une alliance des arts, une traversée lyrique, une harmonie plus vaste que nos disciplines isolées.<br>
+L’Entre-Lumière, c’est nous.<br>
+C’est vous.<br>
+C’est l’entre-deux où l’ombre révèle la clarté,<br>
+où naît une lumière plus pure que la lumière elle-même.      </div>
+    </div>
+  </div>
+  <div class="back-btn" id="backFromEntreLumiere" style="position:absolute;top:24px;left:24px;">← Retour</div>
+</div>
+<!-- Overlay Mémoire FR -->
+<div class="overlay" id="overlay-memoire-fr">
+  <div class="back-btn" id="backFromMemoireFR">← Retour</div>
+  <h1 style="text-align:center;">Mémoire FR</h1>
+  <iframe src="memoir FR.pdf" style="width:90vw;height:85vh;border:none;box-shadow:0 8px 32px rgba(0,0,0,0.18);"></iframe>
+</div>
+<!-- Overlay Mémoire PL -->
+<div class="overlay" id="overlay-memoire-pl">
+  <div class="back-btn" id="backFromMemoirePL">← Retour</div>
+  <h1 style="text-align:center;">Mémoire PL</h1>
+  <iframe src="memoir PL.pdf" style="width:90vw;height:85vh;border:none;box-shadow:0 8px 32px rgba(0,0,0,0.18);"></iframe>
+</div>
+
+  <script>
+    /***** INITIALISATION D'AFFICHAGE (fond seul → logos → sous-titres) *****/
+    const center = document.getElementById('center');
+    const logoMat = document.getElementById('logo');         // Matylda logo (ancien id conservé)
+    const subtitleMat = document.getElementById('subtitleMatylda');
+    const logoEnt = document.getElementById('logoEntre');
+    const subtitleEnt = document.getElementById('subtitleEntre');
+
+    // on cache les images et sous-titres par défaut (ils ont opacity:0 dans CSS)
+    // 1) après 3s : on retire la classe init-hide pour laisser apparaître l'espace, puis on active les images
+    setTimeout(() => {
+      center.classList.remove('init-hide'); // on rend le conteneur visible (mais images restaient opaques)
+      // déclenche apparition logos
+      [logoMat, logoEnt].forEach(img => img && img.classList.add('visible'));
+    }, 3000);
+
+    // 2) après 6s : apparition des sous-titres
+    setTimeout(() => {
+      [subtitleMat, subtitleEnt].forEach(s => s && s.classList.add('visible'));
+    }, 6000);
+
+    /***** COMPORTEMENTS : clics sur les blocs (logo + sous-titre agiront comme 1 bloc) *****/
+    const menuLeft = document.getElementById('menuLeft');
+    const menuRight = document.getElementById('menuRight');
+
+    // Matylda (gauche) — ouvre menuLeft
+    document.getElementById('entry-matylda').addEventListener('click', (e) => {
+      e.preventDefault();
+      center.classList.add('hidden');
+      menuLeft.classList.add('active');
+      // on ferme overlays si besoin
+      document.querySelectorAll('.overlay.active').forEach(o => o.classList.remove('active'));
+    });
+    // Entre-Lumière (droite) — ouvre menuRight
+    document.getElementById('entry-entre').addEventListener('click', (e) => {
+      e.preventDefault();
+      center.classList.add('hidden');
+      menuRight.classList.add('active', 'right'); // s'assure que c'est à droite
+      document.querySelectorAll('.overlay.active').forEach(o => o.classList.remove('active'));
+    });
+
+    // si on clique directement sur les sous-titres (même comportement)
+    subtitleMat && subtitleMat.addEventListener('click', (e) => {
+      e.preventDefault();
+      center.classList.add('hidden');
+      menuLeft.classList.add('active');
+    });
+    subtitleEnt && subtitleEnt.addEventListener('click', (e) => {
+      e.preventDefault();
+      center.classList.add('hidden');
+      menuRight.classList.add('active', 'right');
+    });
+
+    /***** RETOUR A L'ACCUEIL (bouton mini logo/menu) - on laisse ces comportements existants si présents */
+    function backToHome() {
+      document.getElementById("hero").style.background = 'url("fond.png") no-repeat center center/cover';
+      // ferme menus
+      menuLeft.classList.remove("active");
+      menuRight.classList.remove("active");
+      // Masque sections mémoires/projets / overlays
+      document.getElementById("memoireSection").classList.remove("show");
+      document.getElementById("projects").classList.remove("active");
+      document.querySelectorAll('.overlay.active').forEach(o => o.classList.remove('active'));
+      // fait ré-apparaitre l'accueil (sans réinitialiser les animations)
+      center.classList.remove("hidden");
+    }
+
+    // mini-logo / mini-subtitle (gauche/droite dans tes menus) — si présents dans menu, on les garde
+    const miniLogo = document.querySelector(".mini-logo");
+    if (miniLogo) miniLogo.addEventListener("click", backToHome);
+    const miniSubtitle = document.querySelector(".mini-subtitle");
+    if (miniSubtitle) miniSubtitle.addEventListener("click", backToHome);
+
+    /***** RESTE DE TES SCRIPTS ORIGINAUX (sous-menus, mémoires, projets, overlays) *****/
+    // Toggle sous-menus (garde ta logique)
+    function toggleMenu(id) {
+      const menu = document.getElementById(id);
+      if (!menu) return;
+      menu.style.display = (menu.style.display === "block") ? "none" : "block";
+    }
+    document.getElementById("toggleArtistes")?.addEventListener("click", () => toggleMenu("submenuArtistes"));
+    document.getElementById("toggleBio")?.addEventListener("click", () => toggleMenu("submenuBio"));
+    document.getElementById("togglePerso")?.addEventListener("click", () => toggleMenu("submenuPerso"));
+    document.getElementById("toggleExpo")?.addEventListener("click", () => toggleMenu("submenuExpo"));
+    document.getElementById("toggleEtudes")?.addEventListener("click", () => toggleMenu("submenuEtudes"));
+
+    // Clic sur "Mémoire" (depuis menu gauche)
+    document.getElementById("openMemoireFromMenu")?.addEventListener("click", (e) => {
+      e.preventDefault();
+      const hero = document.getElementById("hero");
+      const mem = document.getElementById("memoireSection");
+
+      mem.classList.remove("show");
+      const img = new Image();
+      img.onload = () => {
+        hero.style.background = 'url("memoires.png") no-repeat center center/cover';
+        mem.classList.add("show");
+      };
+      img.onerror = () => {
+        hero.style.background = 'url("memoires.png") no-repeat center center/cover';
+        mem.classList.add("show");
+      };
+      img.src = "memoires.png";
+
+      document.querySelectorAll('.overlay.active').forEach(o => o.classList.remove('active'));
+    });
+
+    // Clic sur "Scénographe" (dans menu artistes droit/gauche selon structure d'origine)
+    document.getElementById("scenoLink")?.addEventListener("click", (e) => {
+      e.preventDefault();
+      const projects = document.getElementById("projects");
+      projects.classList.add("active");
+      document.getElementById("memoireSection").classList.remove("show");
+      document.querySelectorAll('.overlay.active').forEach(o => o.classList.remove('active'));
+    });
+
+    // ---------- NOUVEAU : ouverture overlays expo (MATYLDA) ----------
+    document.getElementById("expoCzteryLink")?.addEventListener("click", (e) => {
+      e.preventDefault();
+      document.getElementById("center").classList.add("hidden");
+      document.getElementById("memoireSection").classList.remove("show");
+      document.getElementById("projects").classList.remove("active");
+      document.getElementById("overlay-expo-cztery")?.classList.add("active");
+    });
+    document.getElementById("backFromExpo")?.addEventListener("click", backToHome);
+
+    document.getElementById("expoTwarzowiskoLink")?.addEventListener("click", (e) => {
+      e.preventDefault();
+      document.getElementById("center").classList.add("hidden");
+      document.getElementById("memoireSection").classList.remove("show");
+      document.getElementById("projects").classList.remove("active");
+      document.getElementById("overlay-expo-twarzowisko")?.classList.add("active");
+    });
+    document.getElementById("backFromExpoTwarz")?.addEventListener("click", backToHome);
+
+    /***** BORDS SENSIBLES POUR AFFICHER LES MENUS (inchangé) *****/
+    const edgeLeft = document.querySelector('.edge-left');
+    const edgeRight = document.querySelector('.edge-right');
+
+    // Affiche au survol du bord (behaviour identique)
+    edgeLeft?.addEventListener('mouseenter', () => menuLeft.classList.add('show'));
+    edgeRight?.addEventListener('mouseenter', () => menuRight.classList.add('show'));
+
+    // Cache quand on quitte le menu
+    menuLeft?.addEventListener('mouseleave', () => menuLeft.classList.remove('show'));
+    menuRight?.addEventListener('mouseleave', () => menuRight.classList.remove('show'));
+
+    // Optionnel : si on quitte aussi la zone de bord sans entrer dans le menu
+    edgeLeft?.addEventListener('mouseleave', () => {
+      setTimeout(() => { if (!menuLeft.matches(':hover')) menuLeft.classList.remove('show'); }, 200);
+    });
+    edgeRight?.addEventListener('mouseleave', () => {
+      setTimeout(() => { if (!menuRight.matches(':hover')) menuRight.classList.remove('show'); }, 200);
+    });
+
+    /***** CONTENU DYNAMIQUE DANS LE PANNEAU ENTRE-LUMIÈRE (droite) *****/
+    const entreSections = ['entre-manifeste','entre-artistes','entre-calendar','entre-nouveautes','entre-rejoindre','entre-contact'];
+    function hideAllEntreSections() {
+      entreSections.forEach(id => document.getElementById(id)?.classList.remove('active'));
+    }
+    document.getElementById('entreManifesteLink')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      hideAllEntreSections();
+      document.getElementById('entre-manifeste')?.classList.add('active');
+    });
+    document.getElementById('entreArtistesLink')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      hideAllEntreSections();
+      document.getElementById('entre-artistes')?.classList.add('active');
+    });
+    document.getElementById('entreCalendarLink')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      hideAllEntreSections();
+      document.getElementById('entre-calendar')?.classList.add('active');
+    });
+    document.getElementById('entreNouveautesLink')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      hideAllEntreSections();
+      document.getElementById('entre-nouveautes')?.classList.add('active');
+    });
+    document.getElementById('entreRejoindreLink')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      hideAllEntreSections();
+      document.getElementById('entre-rejoindre')?.classList.add('active');
+    });
+    document.getElementById('entreContactLink')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      hideAllEntreSections();
+      document.getElementById('entre-contact')?.classList.add('active');
+    });
+
+    /***** FERMETURE DES MENUS (si besoin d'un bouton 'fermer' tu peux en ajouter) *****/
+    // Ici on n'ajoute pas de bouton supplémentaire — l'utilisateur revient en cliquant sur mini-logo / mini-subtitle (backToHome) ou en glissant souris hors menu.
+    // Mais on peut ajouter un handler global : si échappe pressé, on revient
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') backToHome();
+    });
+document.getElementById("openMemoireFR")?.addEventListener("click", (e) => {
+  e.preventDefault();
+  document.getElementById("center").classList.add("hidden");
+  document.getElementById("memoireSection").classList.remove("show");
+  document.getElementById("projects").classList.remove("active");
+  document.querySelectorAll('.overlay.active').forEach(o => o.classList.remove('active'));
+  document.getElementById("overlay-memoire-fr")?.classList.add("active");
+});
+document.getElementById("backFromMemoireFR")?.addEventListener("click", backToHome);
+
+document.getElementById("openMemoirePL")?.addEventListener("click", (e) => {
+  e.preventDefault();
+  document.getElementById("center").classList.add("hidden");
+  document.getElementById("memoireSection").classList.remove("show");
+  document.getElementById("projects").classList.remove("active");
+  document.querySelectorAll('.overlay.active').forEach(o => o.classList.remove('active'));
+  document.getElementById("overlay-memoire-pl")?.classList.add("active");
+});
+document.getElementById("backFromMemoirePL")?.addEventListener("click", backToHome);
+document.getElementById("openMemoirePLBloc")?.addEventListener("click", (e) => {
+  e.preventDefault();
+  document.getElementById("memoireSection").style.display = "none";
+  document.getElementById("overlay-memoire-pl")?.classList.add("active");
+});
+document.getElementById('entreManifesteLink')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('center').classList.add('hidden');
+  document.getElementById('memoireSection').classList.remove('show');
+  document.getElementById('projects').classList.remove('active');
+  document.querySelectorAll('.overlay.active').forEach(o => o.classList.remove('active'));
+  document.getElementById('entreLumiereContent').style.display = 'block';
+});
+document.getElementById('backFromEntreLumiere')?.addEventListener('click', () => {
+  document.getElementById('entreLumiereContent').style.display = 'none';
+  backToHome();
+});
+document.getElementById("toggleEtudes")?.addEventListener("click", (e) => {
+  e.preventDefault();
+  document.getElementById("center").classList.add("hidden");
+  document.getElementById("menuLeft").classList.remove("active");
+  document.getElementById("memoireSection").style.display = "flex";
+});
+document.getElementById("openMemoireFRBloc")?.addEventListener("click", (e) => {
+  e.preventDefault();
+  document.getElementById("memoireSection").style.display = "none";
+  document.getElementById("overlay-memoire-fr")?.classList.add("active");
+});
+document.getElementById("openMemoirePLBloc")?.addEventListener("click", (e) => {
+  e.preventDefault();
+  document.getElementById("memoireSection").style.display = "none";
+  document.getElementById("overlay-memoire-pl")?.classList.add("active");
+});
+
+document.getElementById('entreArtistesLink')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('center').classList.add('hidden');
+  document.getElementById('memoireSection').classList.remove('show');
+  document.getElementById('projects').classList.remove('active');
+  document.querySelectorAll('.overlay.active').forEach(o => o.classList.remove('active'));
+  document.getElementById('overlay-artistes-disciplines').classList.add('active');
+});
+document.getElementById('backFromArtistesDisc')?.addEventListener('click', () => {
+  document.getElementById('overlay-artistes-disciplines').classList.remove('active');
+  backToHome();
+});
+
+    // Empêche la page de scroller (overlay) quand overlay ouvert ; si overlays existent, on gère la classe active ci-dessus
+  </script>
+
+<!-- Overlay Artistes & Disciplines -->
+<div class="overlay" id="overlay-artistes-disciplines">
+  <div class="back-btn" id="backFromArtistesDisc">← Retour</div>
+  <div class="stage">
+    <div class="intro">
+      <h1>Artistes & disciplines</h1>
+      <p>Nous invitons interprètes, compositeurs, chorégraphes, plasticiens et technicien·ne·s à collaborer en laboratoire puis en création publique.</p>
+    </div>
+    <div class="shards">
+      <a id="musique" class="shard form-1"><span>Musique</span></a>
+      <a id="danse" class="shard form-2"><span>Danse</span></a>
+      <a id="arts-visuels" class="shard form-3"><span>Arts visuels</span></a>
+      <a id="ecriture" class="shard form-4"><span>Écriture</span></a>
+      <a id="mise-en-scene" class="shard form-5"><span>Mise en scène</span></a>
+      <a id="arts-numeriques" class="shard form-6"><span>Arts numériques</span></a>
+      <a id="scenographie" class="shard form-1"><span>Scénographie</span></a>
+      <a id="peinture" class="shard form-2"><span>Peinture</span></a>
+      <a id="lumiere" class="shard form-3"><span>Lumière</span></a>
+      <a id="costume" class="shard form-4"><span>Costume</span></a>
+      <a id="performance" class="shard form-5"><span>Performance</span></a>
+      <a id="medias-hybrides" class="shard form-6"><span>Médias hybrides</span></a>
+    </div>
+  </div>
+</div>
+</body>
+</html>
